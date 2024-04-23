@@ -3,80 +3,92 @@
 void diffSweep::input()
 {
 	std::ifstream fin(data);
-
+	double A, B;
 	for (int i = 0; i < 2; ++i)
 		fin >> alpha_[i] >> beta_[i] >> gamma_[i];
 	fin >> A >> B >> N;
 
 	int nodeNumber;
 	double xValue;
-	for (int i = 0; i < N; ++i) {
+	X.emplace(0, A);
+	for (int i = 1; i < N; ++i) {
 		fin >> nodeNumber >> xValue;
 		X.emplace(nodeNumber, xValue);
 	}
+	X.emplace(N, B);
 
 	fin.close();
 }
 
+double support_coef;
+
+double linear_comb_2(double x, double y) {
+	return support_coef * x + y;
+}
+double linear_comb_1(double x) {
+	return support_coef * x;
+}
+
 void diffSweep::solve()
 {
-	//u = calculate_Coshi(////p*u + v////,0, alpha_[0]);
-	//v = calculate_Coshi(////q*u////,0, -beta_[0]);
-	//w = calculate_Coshi(////f*u////,0, gamma_[0]);
-	
-	//alpha = calculate_Coshi(////p*alpha + beta////,0, alpha_[1]);
-	//beta = calculate_Coshi(////q*alpha////,0, -beta_[1]);
-	//gamma = calculate_Coshi(////f*alpha////,0, gamma_[1]);
-
-	/*
-	* => на данном этапе получили систему
-	  u			-v		=	w
-	  alpha	    -beta	=  gamma
-
-	*/
-
-	//check if there is solution
-	if(u*beta != (-v)*alpha)
+	for (int i = 1; i < N; ++i)
 	{
-		double y, yDerivative;
-		for (int i = 0; i < N; ++i) {
-			pair<double, double> yValues = solve_systeme(i);
+		support_coef = p(X.at(i));
+		u = calculate_RungeKutta(linear_comb_2,0, alpha_[0]);
+		support_coef = q(X.at(i));
+		v = calculate_RungeKutta(linear_comb_1, 0, -beta_[0]);
+		support_coef = f(X.at(i));
+		w = calculate_RungeKutta(linear_comb_1, 0, gamma_[0]);
+
+		support_coef = p(X.at(i));
+		alpha = calculate_RungeKutta(linear_comb_2, 0, alpha_[1]);
+		support_coef = q(X.at(i));
+		beta = calculate_RungeKutta(linear_comb_1, 0, -beta_[1]);
+		support_coef = f(X.at(i));
+		gamma = calculate_RungeKutta(linear_comb_1, 0, gamma_[1]);
+		/*
+		* => на данном этапе получили систему
+		 u			-v		=	w
+		 alpha	    -beta	=  gamma
+		*/
+
+		//check if there is solution
+		if (u * beta != (-v) * alpha) {
+			pair<double, double> yValues = solve_linear_system(i);
 			step_to_string(i, yValues.first, yValues.second);
 		}
-	}
-	else {
-		Icod = 2; //или 1?
-		throw std::invalid_argument("Система несовместна.");
+		else {
+			Icod = 2; //или 1?
+			throw std::invalid_argument("Система несовместна.");
+		}
 	}
 }
 
-pair<double, double> diffSweep::solve_systeme(int nodeNumber)
+pair<double, double> diffSweep::solve_linear_system(int nodeNumber)
 {
-	//????
-	/*
-	  u			-v		=	w
-	  alpha	    -beta	=  gamma
-	*/
-
-	return pair<double, double>();
+	double det = 1 / (beta * u - v * alpha);
+	double yD = det*(w * beta - v * gamma);
+	double y = -det*(gamma * u - alpha * w);
+	return pair<double, double>(y,yD);
 }
 
-
-double diffSweep::calculate_RungeKutta(double (*function)(double,double), int nodeNumber, double y_0)
+double diffSweep::calculate_RungeKutta(double (*function)(double,double),
+	int nodeNumber, double y_0)
 {
-	//who is h ?? откуда взять шаг? он постоянный? но сетка же не грантированно с равноотстоящими узлами.
-	double h = 0.00001;//???	!tmp solution
+	double h = abs(X.at(nodeNumber) - X.at(nodeNumber-1));
 
 	double K1 = h * function(X.at(nodeNumber),y_0);
-	double K2 = h * function(X.at(nodeNumber), y_0 + K1);
+	double K2 = h * function(X.at(nodeNumber)+h, y_0 + K1);
 	return y_0 + 0.5*(K1+K2);
 }
 
-double diffSweep::calculate_Coshi(double (*function)(double, double), /*double x_0, */double y_0)
+double diffSweep::calculate_RungeKutta(double (*function)(double),
+	int nodeNumber, double y_0)
 {
-	for (int i = 1; i < N; ++i)
-		y_0 = calculate_RungeKutta(function, i, y_0);
-	return y_0;
+	double h = abs(X.at(nodeNumber) - X.at(nodeNumber - 1));
+	double K1 = function(X.at(nodeNumber));
+	double K2 = function(X.at(nodeNumber)+h);
+	return y_0 + 0.5 * h * (K1 + K2);
 }
 
 string diffSweep::step_to_string(int nodeNumber, double y, double yDerivative) const 
@@ -90,3 +102,4 @@ string diffSweep::step_to_string(int nodeNumber, double y, double yDerivative) c
 		<< std::setw(65) << yDerivative << '\n';
 	return ss.str();
 }
+
