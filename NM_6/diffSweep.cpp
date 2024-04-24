@@ -34,18 +34,18 @@ void diffSweep::solve()
 	for (int i = 1; i < N; ++i)
 	{
 		support_coef = p(X.at(i));
-		u = calculate_RungeKutta(linear_comb_2,0, alpha_[0]);
+		u = calculate_RungeKutta(linear_comb_2, i, alpha_[0]);
 		support_coef = q(X.at(i));
-		v = calculate_RungeKutta(linear_comb_1, 0, -beta_[0]);
+		v = calculate_RungeKutta(linear_comb_1, i, -beta_[0]);
 		support_coef = f(X.at(i));
-		w = calculate_RungeKutta(linear_comb_1, 0, gamma_[0]);
+		w = calculate_RungeKutta(linear_comb_1, i, gamma_[0]);
 
 		support_coef = p(X.at(i));
-		alpha = calculate_RungeKutta(linear_comb_2, 0, alpha_[1]);
+		alpha = calculate_RungeKutta(linear_comb_2, i, alpha_[1]);
 		support_coef = q(X.at(i));
-		beta = calculate_RungeKutta(linear_comb_1, 0, -beta_[1]);
+		beta = calculate_RungeKutta(linear_comb_1, i, -beta_[1]);
 		support_coef = f(X.at(i));
-		gamma = calculate_RungeKutta(linear_comb_1, 0, gamma_[1]);
+		gamma = calculate_RungeKutta(linear_comb_1, i, gamma_[1]);
 		/*
 		* => на данном этапе получили систему
 		 u			-v		=	w
