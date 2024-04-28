@@ -15,37 +15,53 @@ void diffSweep::input()
 		fin >> nodeNumber >> xValue;
 		X.emplace(nodeNumber, xValue);
 	}
-	X.emplace(N, B);
+	X.emplace(N-1, B);
 
 	fin.close();
 }
 
-double support_coef;
-
-double linear_comb_2(double x, double y) {
-	return support_coef * x + y;
-}
-double linear_comb_1(double x) {
-	return support_coef * x;
-}
-
 void diffSweep::solve()
 {
+	std::ofstream fout("output.txt");
+	double curr_u = alpha_[0];
+	double curr_v = -beta_[0];
+	double curr_w = gamma_[0];
+	double curr_a = alpha_[1];
+	double curr_b = -beta_[1];
+	double curr_g = gamma_[1];
+	int sign_h;
+
+	auto Runge_Kutta = [this, &sign_h](int ind_x, double y1_0, double y2_0, double y3_0,
+		double& y1, double& y2, double& y3)
+	{
+			//fyfkjubxyj gjvtyznm b vector<>y, vector<>y_0
+		//todo:: если бы функции были в массиве указателей, то можно было бы пропустить циклом
+		// и снизить число вычислений
+
+		double K_1[3] = {};
+		double K_2[3] = {};
+		double x_0 = X.at(ind_x);
+		double h = x_0 - X.at(ind_x - sign_h);
+
+		K_1[0] = h * f1(X.at(ind_x), y1_0, y2_0, y3_0);
+		K_1[1] = h * f2(X.at(ind_x), y1_0, y2_0, y3_0);
+		K_1[2] = h * f3(X.at(ind_x), y1_0, y2_0, y3_0);
+
+		K_2[0] = h * f1(X.at(ind_x)+h, y1_0 + K_1[0], y2_0 + K_1[1], y3_0 + K_1[2]);
+		K_2[1] = h * f2(X.at(ind_x)+h, y1_0 + K_1[0], y2_0 + K_1[1], y3_0 + K_1[2]);
+		K_2[2] = h * f3(X.at(ind_x)+h, y1_0 + K_1[0], y2_0 + K_1[1], y3_0 + K_1[2]);
+
+		y1 = y1_0 + 0.5 * (K_1[0] + K_2[0]);
+		y2 = y2_0 + 0.5 * (K_1[1] + K_2[1]);
+		y3 = y3_0 + 0.5 * (K_1[2] + K_2[2]);
+	};
+
 	for (int i = 1; i < N; ++i)
 	{
-		support_coef = p(X.at(i));
-		u = calculate_RungeKutta(linear_comb_2, i, alpha_[0]);
-		support_coef = q(X.at(i));
-		v = calculate_RungeKutta(linear_comb_1, i, -beta_[0]);
-		support_coef = f(X.at(i));
-		w = calculate_RungeKutta(linear_comb_1, i, gamma_[0]);
-
-		support_coef = p(X.at(i));
-		alpha = calculate_RungeKutta(linear_comb_2, i, alpha_[1]);
-		support_coef = q(X.at(i));
-		beta = calculate_RungeKutta(linear_comb_1, i, -beta_[1]);
-		support_coef = f(X.at(i));
-		gamma = calculate_RungeKutta(linear_comb_1, i, gamma_[1]);
+		sign_h = 1;
+		Runge_Kutta(i, curr_u, curr_v, curr_w, u, v, w);
+		sign_h = -1;
+		Runge_Kutta((N-i-1), curr_a, curr_b, curr_g, alpha, beta, gamma);
 		/*
 		* => на данном этапе получили систему
 		 u			-v		=	w
@@ -55,40 +71,33 @@ void diffSweep::solve()
 		//check if there is solution
 		if (u * beta != (-v) * alpha) {
 			pair<double, double> yValues = solve_linear_system(i);
-			step_to_string(i, yValues.first, yValues.second);
+			string step = step_to_string(i, yValues.first, yValues.second);
+			std::cout << step; //отладочная печать
+			fout << step;
 		}
 		else {
-			Icod = 2; //или 1?
-			throw std::invalid_argument("Система несовместна.");
+			/*Icod = 1;
+			throw std::invalid_argument("Система несовместна.");*/
+			fout << "Icod = 1.\nСистема несовместна.";
 		}
+
+		curr_u = u;
+		curr_v = v;
+		curr_w = w;
+		curr_a = alpha;
+		curr_b = beta;
+		curr_g = gamma;
 	}
+	fout.close();
 }
 
 pair<double, double> diffSweep::solve_linear_system(int nodeNumber)
 {
+	//добавить в отчет вывод этого
 	double det = 1 / (beta * u - v * alpha);
 	double yD = det*(w * beta - v * gamma);
 	double y = -det*(gamma * u - alpha * w);
 	return pair<double, double>(y,yD);
-}
-
-double diffSweep::calculate_RungeKutta(double (*function)(double,double),
-	int nodeNumber, double y_0)
-{
-	double h = abs(X.at(nodeNumber) - X.at(nodeNumber-1));
-
-	double K1 = h * function(X.at(nodeNumber),y_0);
-	double K2 = h * function(X.at(nodeNumber)+h, y_0 + K1);
-	return y_0 + 0.5*(K1+K2);
-}
-
-double diffSweep::calculate_RungeKutta(double (*function)(double),
-	int nodeNumber, double y_0)
-{
-	double h = abs(X.at(nodeNumber) - X.at(nodeNumber - 1));
-	double K1 = function(X.at(nodeNumber));
-	double K2 = function(X.at(nodeNumber)+h);
-	return y_0 + 0.5 * h * (K1 + K2);
 }
 
 string diffSweep::step_to_string(int nodeNumber, double y, double yDerivative) const 
