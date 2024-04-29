@@ -24,7 +24,6 @@ class diffSweep {
 
 	//double(*functions[3])(double,double,double,double);
 	//in 
-	//vector<double(*)(double, double, double, double)> functions;
 	double f1(double x, double y1, double y2, double y3) {
 		return p(x) * y1 + y2;
 	}
@@ -34,6 +33,7 @@ class diffSweep {
 	double f3(double x, double y1, double y2, double y3) {
 		return f(x) * y1;
 	}
+	//vector<double(*)(double, double, double, double)> functions;
 
 	int Icod = 0;
 	int N;
