@@ -22,7 +22,7 @@ void diffSweep::input()
 
 void diffSweep::solve()
 {
-	std::ofstream fout("output.txt");
+	std::ofstream fout(rez);
 	double curr_u = alpha_[0];
 	double curr_v = -beta_[0];
 	double curr_w = gamma_[0];
@@ -55,6 +55,7 @@ void diffSweep::solve()
 		y2 = y2_0 + 0.5 * (K_1[1] + K_2[1]);
 		y3 = y3_0 + 0.5 * (K_1[2] + K_2[2]);
 	};
+
 	sign_h = -1;
 	for (int i = N - 2; i > 0; --i)
 	{
@@ -68,7 +69,7 @@ void diffSweep::solve()
 		curr_g = tmp_g;
 	}
 
-	for (int i = 1; i < N; ++i)
+	for (int i = 1; i < N-1; ++i)
 	{
 		sign_h = 1;
 		Runge_Kutta(i, curr_u, curr_v, curr_w, u, v, w);
@@ -79,7 +80,7 @@ void diffSweep::solve()
 		*/
 
 		//check if there is solution
-		if (u * beta[i] != (-v) * alpha[i]) {
+		if (u * beta[i] != (v) * alpha[i]) {
 			pair<double, double> yValues = solve_linear_system(i);
 			string step = step_to_string(i, yValues.first, yValues.second);
 			std::cout << step; //отладочная печать
@@ -88,7 +89,9 @@ void diffSweep::solve()
 		else {
 			/*Icod = 1;
 			throw std::invalid_argument("Система несовместна.");*/
-			fout << "Icod = 1.\nСистема несовместна.";
+			fout << "\i = " << i << "\tIcod = 1. Система несовместна.\n";
+			fout << u << ' ' << -v << " = " << w << '\n' <<
+				alpha[i] << ' ' << -beta[i] << " = " << gamma[i] << '\n';
 		}
 
 		curr_u = u;
