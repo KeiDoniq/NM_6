@@ -41,7 +41,7 @@ class diffSweep {
 	map<int,double> X; 
 	
 	double u, w, v;
-	double alpha, beta, gamma;
+	map<int, double> alpha, beta, gamma;
 
 	void input();
 	void solve();
