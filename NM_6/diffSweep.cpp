@@ -40,9 +40,11 @@ void diffSweep::solve()
 
 		double K_1[3] = {};
 		double K_2[3] = {};
-		double x_0 = X.at(ind_x);
-		double h = x_0 - X.at(ind_x - sign_h);
-
+		
+		double x_0 = X.at(ind_x - sign_h);
+		double h = X.at(ind_x) - x_0;
+		//double x_0 = X.at(ind_x);
+		//double h = x_0 - X.at(ind_x);
 		K_1[0] = h * f1(x_0, y1_0, y2_0, y3_0);
 		K_1[1] = h * f2(x_0, y1_0, y2_0, y3_0);
 		K_1[2] = h * f3(x_0, y1_0, y2_0, y3_0);
@@ -69,9 +71,9 @@ void diffSweep::solve()
 		curr_g = tmp_g;
 	}
 
+	sign_h = 1;
 	for (int i = 1; i < N-1; ++i)
-	{
-		sign_h = 1;
+	{	
 		Runge_Kutta(i, curr_u, curr_v, curr_w, u, v, w);
 		/*
 		* => на данном этапе получили систему
@@ -80,7 +82,7 @@ void diffSweep::solve()
 		*/
 
 		//check if there is solution
-		if (u * beta[i] != (v) * alpha[i]) {
+		if (u * beta[i] != v * alpha[i]) {
 			pair<double, double> yValues = solve_linear_system(i);
 			string step = step_to_string(i, yValues.first, yValues.second);
 			std::cout << step; //отладочная печать

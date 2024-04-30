@@ -31,5 +31,7 @@
     <Text Include="ex&amp;questions.txt" />
     <Text Include="data.txt" />
     <Text Include="data2.txt" />
+    <Text Include="data4.txt" />
+    <Text Include="data5.txt" />
   </ItemGroup>
 </Project>

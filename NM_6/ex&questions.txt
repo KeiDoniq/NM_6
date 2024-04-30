@@ -1,4 +1,4 @@
-alpha_1 beta_1 gamma_1 alpha_2 beta_2 gamma_2
+1 beta_1 gamma_1 alpha_2 beta_2 gamma_2
 A B N
 i x
 ...
