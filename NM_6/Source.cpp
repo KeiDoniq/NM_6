@@ -1,16 +1,17 @@
 #include "diffSweep.h"
 
 double p(double x) {
-	return 1;
-	//return 0;
+	//return 1;
+	return 0;
 }
 double f(double x) {
-	return 2+2*x+x*x;
-	//return 2;
+	//return 2+2*x-x*x;
+	//return 1-x;
+	return 2;
 }
 double q(double x) {
-	return 1;
-	//return 0;
+	//return 1;
+	return 0;
 }
 
 int main() {
